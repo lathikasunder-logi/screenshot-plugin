@@ -1,0 +1,15 @@
+/Users/lsunder/screenshot-plugin/DotNetWrapper/bin/Debug/net8.0/DotNetWrapper
+/Users/lsunder/screenshot-plugin/DotNetWrapper/bin/Debug/net8.0/DotNetWrapper.deps.json
+/Users/lsunder/screenshot-plugin/DotNetWrapper/bin/Debug/net8.0/DotNetWrapper.runtimeconfig.json
+/Users/lsunder/screenshot-plugin/DotNetWrapper/bin/Debug/net8.0/DotNetWrapper.dll
+/Users/lsunder/screenshot-plugin/DotNetWrapper/bin/Debug/net8.0/DotNetWrapper.pdb
+/Users/lsunder/screenshot-plugin/DotNetWrapper/obj/Debug/net8.0/DotNetWrapper.GeneratedMSBuildEditorConfig.editorconfig
+/Users/lsunder/screenshot-plugin/DotNetWrapper/obj/Debug/net8.0/DotNetWrapper.AssemblyInfoInputs.cache
+/Users/lsunder/screenshot-plugin/DotNetWrapper/obj/Debug/net8.0/DotNetWrapper.AssemblyInfo.cs
+/Users/lsunder/screenshot-plugin/DotNetWrapper/obj/Debug/net8.0/DotNetWrapper.csproj.CoreCompileInputs.cache
+/Users/lsunder/screenshot-plugin/DotNetWrapper/obj/Debug/net8.0/DotNetWrapper.sourcelink.json
+/Users/lsunder/screenshot-plugin/DotNetWrapper/obj/Debug/net8.0/DotNetWrapper.dll
+/Users/lsunder/screenshot-plugin/DotNetWrapper/obj/Debug/net8.0/refint/DotNetWrapper.dll
+/Users/lsunder/screenshot-plugin/DotNetWrapper/obj/Debug/net8.0/DotNetWrapper.pdb
+/Users/lsunder/screenshot-plugin/DotNetWrapper/obj/Debug/net8.0/DotNetWrapper.genruntimeconfig.cache
+/Users/lsunder/screenshot-plugin/DotNetWrapper/obj/Debug/net8.0/ref/DotNetWrapper.dll
