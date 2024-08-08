@@ -33,15 +33,15 @@ void saveImage(const std::string& filename, int width, int height, unsigned char
 }
 
 // Combines multiple images into a single collage
-void combineImages(const std::vector<std::pair<int, unsigned char*> >& images, const std::vector<int>& heights, const std::string& outputFilePath) {
+void combineImages(const std::vector<std::pair<int, unsigned char*>>& images, const std::vector<int>& heights, const std::string& outputFilePath) {
     if (images.empty()) return;
 
     // Calculate total width and max height for the collage
     int totalWidth = 0;
     int maxHeight = 0;
-    for (const auto& image : images) {
-        int width = image.first;
-        int height = heights[&image - &images[0]];
+    for (size_t i = 0; i < images.size(); ++i) {
+        int width = images[i].first;
+        int height = heights[i];
         totalWidth += width;
         if (height > maxHeight) {
             maxHeight = height;
@@ -67,19 +67,16 @@ void combineImages(const std::vector<std::pair<int, unsigned char*> >& images, c
     saveImage(outputFilePath, totalWidth, maxHeight, combinedData.get());
 }
 
-
 // Function to arrange images in a Picture-in-Picture (PIP) layout
 void pipImages(const std::vector<std::pair<int, unsigned char*>>& images, const std::vector<int>& heights, const std::string& outputFilePath) {
     if (images.empty()) return;
 
-    // Assuming the first image is the main display, and the others are the smaller PIP displays
     const int mainIndex = 0;
     int mainWidth = images[mainIndex].first;
     int mainHeight = heights[mainIndex];
 
-    // Determine the size for the smaller PIP displays (4:1 ratio)
-    int pipWidth = mainWidth / 4;
-    int pipHeight = mainHeight / 4;
+    int pipWidth = mainWidth / 3.2;
+    int pipHeight = mainHeight / 3.2;
 
     // Calculate the total width and height needed for the final image
     int totalWidth = mainWidth;
@@ -92,8 +89,8 @@ void pipImages(const std::vector<std::pair<int, unsigned char*>>& images, const 
     std::memcpy(combinedData.get(), images[mainIndex].second, mainWidth * mainHeight * 4);
 
     // Calculate positions and copy PIP images into the final image
-    int offsetX = mainWidth - pipWidth - 10; // 10 pixels margin from the right edge
-    int offsetY = mainHeight - pipHeight - 10; // 10 pixels margin from the bottom edge
+    int offsetX = mainWidth - pipWidth - 20; // 10 pixels margin from the right edge
+    int offsetY = mainHeight - pipHeight - 20; // 10 pixels margin from the bottom edge
 
     for (size_t i = 1; i < images.size(); ++i) {
         unsigned char* pipData = images[i].second;
@@ -112,15 +109,21 @@ void pipImages(const std::vector<std::pair<int, unsigned char*>>& images, const 
         }
 
         // Update the position for the next PIP display (if any)
-        offsetY -= pipHeight + 10;
+        offsetY -= pipHeight + 15;
     }
 
     // Save the final image
     saveImage(outputFilePath, totalWidth, totalHeight, combinedData.get());
 }
 
-
 #if defined(_WIN32)
+// Convert BGRA to RGBA
+void convertBGRAToRGBA(unsigned char* data, int width, int height) {
+    for (int i = 0; i < width * height; ++i) {
+        std::swap(data[i * 4], data[i * 4 + 2]); // Swap red and blue
+    }
+}
+
 // Capture a screenshot of a monitor and return the image data
 std::pair<int, unsigned char*> captureScreenshot(HMONITOR hMonitor, int& height) {
     MONITORINFO mi;
@@ -143,6 +146,9 @@ std::pair<int, unsigned char*> captureScreenshot(HMONITOR hMonitor, int& height)
     DeleteObject(hBitmap);
     DeleteDC(hDC);
 
+    // Convert BGRA to RGBA
+    convertBGRAToRGBA(data, width, height);
+
     return std::make_pair(width, data);
 }
 
@@ -150,7 +156,7 @@ std::pair<int, unsigned char*> captureScreenshot(HMONITOR hMonitor, int& height)
 BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
     std::vector<std::pair<int, unsigned char*>>& images = *reinterpret_cast<std::vector<std::pair<int, unsigned char*>>*>(dwData);
     std::vector<int>& heights = *reinterpret_cast<std::vector<int>*>(dwData + sizeof(std::vector<std::pair<int, unsigned char*>>));
-    
+
     int height;
     images.push_back(captureScreenshot(hMonitor, height));
     heights.push_back(height);
@@ -158,21 +164,31 @@ BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMoni
 }
 
 #elif defined(__APPLE__)
+#include <CoreGraphics/CoreGraphics.h>
+// Convert BGRA to RGBA
+void convertBGRAToRGBA(unsigned char* data, int width, int height) {
+    for (int i = 0; i < width * height; ++i) {
+        std::swap(data[i * 4], data[i * 4 + 2]); // Swap red and blue
+    }
+}
+
 // Capture a screenshot of a display and return the image data
 std::pair<int, unsigned char*> captureScreenshot(CGDirectDisplayID displayId, int& height) {
     CGImageRef screenshot = CGDisplayCreateImage(displayId);
     int width = static_cast<int>(CGImageGetWidth(screenshot));
     height = static_cast<int>(CGImageGetHeight(screenshot));
-    
+
     CFDataRef dataRef = CGDataProviderCopyData(CGImageGetDataProvider(screenshot));
     const UInt8* data = CFDataGetBytePtr(dataRef);
-    
+
     unsigned char* imgData = new unsigned char[width * height * 4];
     std::memcpy(imgData, data, width * height * 4);
-    
+
     CFRelease(dataRef);
     CGImageRelease(screenshot);
-    
+
+    convertBGRAToRGBA(imgData, width, height);
+
     return std::make_pair(width, imgData);
 }
 #endif
@@ -181,7 +197,7 @@ extern "C" {
     // Capture screenshots from all monitors and combine them into a single image
     void CaptureScreenshot(const char* baseFilename) {
         std::string baseFilepath(baseFilename);
-        std::vector<std::pair<int, unsigned char*> > images;
+        std::vector<std::pair<int, unsigned char*>> images;
         std::vector<int> heights;
 
         #if defined(_WIN32)
@@ -191,10 +207,10 @@ extern "C" {
         CGGetActiveDisplayList(0, NULL, &displayCount);
         CGDirectDisplayID displays[displayCount];
         CGGetActiveDisplayList(displayCount, displays, &displayCount);
-        
-        std::cout<<"Enter Type of Image\n1.Collage\n2.PIP";
+
+        std::cout << "Enter Type of Image\n1.Collage\n2.PIP: ";
         int option;
-        std::cin>>option;
+        std::cin >> option;
 
         for (uint32_t i = 0; i < displayCount; ++i) {
             int height;
@@ -206,13 +222,12 @@ extern "C" {
         return;
         #endif
 
-        std::string outputFilePath = baseFilepath + "_collage.png";
+        std::string outputFilePath = baseFilepath + "_output.png";
 
-        if(option==1)
-        combineImages(images, heights, outputFilePath);
-
-        if(option==2)
-        pipImages(images,heights,outputFilePath);
+        if (option == 1)
+            combineImages(images, heights, outputFilePath);
+        else if (option == 2)
+            pipImages(images, heights, outputFilePath);
 
         // Cleanup
         for (auto& image : images) {

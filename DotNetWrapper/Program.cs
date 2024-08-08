@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 class Program
 {
-    [DllImport("libScreenshotPluginPIP.dylib", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libScreenshotPlugin.dylib", CallingConvention = CallingConvention.Cdecl)]
     public static extern void CaptureScreenshot(string filename);
 
     static void Main(string[] args)
