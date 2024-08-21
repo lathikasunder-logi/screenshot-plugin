@@ -3,7 +3,10 @@
       {
         "name": "Mac",
         "includePath": [
-          "${workspaceFolder}/**"
+          "${workspaceFolder}/**",
+          "/usr/local/Cellar/aws-sdk-cpp/1.11.375/include",
+          "/usr/local/include",
+          "/usr/local/opt/curl/include"
         ],
         "defines": [],
         "macFrameworkPath": [

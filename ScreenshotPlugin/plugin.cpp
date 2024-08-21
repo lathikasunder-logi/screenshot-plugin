@@ -90,8 +90,8 @@ void pipImages(const std::vector<std::pair<int, unsigned char*>>& images, const 
     int mainWidth = images[mainIndex].first;
     int mainHeight = heights[mainIndex];
 
-    int pipWidth = mainWidth / 2.8;
-    int pipHeight = mainHeight / 2.8;
+    int pipWidth = mainWidth / 3.2;
+    int pipHeight = mainHeight / 3.2;
 
     // Calculate the total width and height needed for the final image
     int totalWidth = mainWidth;
@@ -104,8 +104,8 @@ void pipImages(const std::vector<std::pair<int, unsigned char*>>& images, const 
     std::memcpy(combinedData.get(), images[mainIndex].second, mainWidth * mainHeight * 4);
 
     // Calculate positions and copy PIP images into the final image
-    int offsetX = mainWidth - pipWidth - 20; // 20 pixels margin from the right edge
-    int offsetY = mainHeight - pipHeight - 20; // 20 pixels margin from the bottom edge
+    int offsetX = mainWidth - pipWidth - 20; // 10 pixels margin from the right edge
+    int offsetY = mainHeight - pipHeight - 20; // 10 pixels margin from the bottom edge
 
     for (size_t i = 1; i < images.size(); ++i) {
         unsigned char* pipData = images[i].second;
@@ -116,8 +116,8 @@ void pipImages(const std::vector<std::pair<int, unsigned char*>>& images, const 
                 int pipX = x * images[i].first / pipWidth;
                 int pipY = y * heights[i] / pipHeight;
 
-                int srcIndex = (pipY * images[i].first + pipX) * 3.8;
-                int dstIndex = ((y + offsetY) * totalWidth + (x + offsetX)) * 3.8;
+                int srcIndex = (pipY * images[i].first + pipX) * 4;
+                int dstIndex = ((y + offsetY) * totalWidth + (x + offsetX)) * 4;
 
                 std::memcpy(&combinedData[dstIndex], &pipData[srcIndex], 4);
             }
@@ -130,7 +130,6 @@ void pipImages(const std::vector<std::pair<int, unsigned char*>>& images, const 
     // Save the final image
     saveImage(outputFilePath, totalWidth, totalHeight, combinedData.get());
 }
-
 
 //encode the image
 
