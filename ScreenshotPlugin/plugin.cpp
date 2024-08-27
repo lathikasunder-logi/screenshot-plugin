@@ -285,8 +285,9 @@ void postImageToIfttt(std::string imageUrl)
     // Initialize a curl session
     curl = curl_easy_init();
     if(curl) {
+        
         // Specify the URL for the GET request
-        const char* url = "https://maker.ifttt.com/trigger/loupdeckAction/with/key/cAUpJn5crdm1oqUZQSUx7DLJLYS0bRzp7vhrqDccde_?value1="+ imageUrl;
+        const std::string url="https://maker.ifttt.com/trigger/loupdeckAction/with/key/cAUpJn5crdm1oqUZQSUx7DLJLYS0bRzp7vhrqDccde_?value1="+ imageUrl;
 
         // Set the URL for the request
         curl_easy_setopt(curl, CURLOPT_URL, url);
