@@ -1,6 +1,9 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+#include <curl/curl.h>
+#include <nlohmann/json.hpp>
+
 #if defined(_WIN32)
 #include <windows.h>
 #elif defined(__APPLE__)
@@ -196,8 +199,6 @@ std::string base64encode(const std::string& filePath) {
 }
 
 
-#include <curl/curl.h>
-#include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 // Callback function to capture response data
@@ -274,6 +275,37 @@ std::string uploadImageToAPI(const std::string& apiUrl, const std::string& image
 }
 
 
+#include <curl/curl.h>
+#include <nlohmann/json.hpp>
+void postImageToIfttt(std::string imageUrl)
+{
+    CURL *curl;
+    CURLcode res;
+
+    // Initialize a curl session
+    curl = curl_easy_init();
+    if(curl) {
+        // Specify the URL for the GET request
+        const char* url = "https://maker.ifttt.com/trigger/loupdeckAction/with/key/cAUpJn5crdm1oqUZQSUx7DLJLYS0bRzp7vhrqDccde_?value1="+ imageUrl;
+
+        // Set the URL for the request
+        curl_easy_setopt(curl, CURLOPT_URL, url);
+
+        // Perform the request, and res will get the return code
+        res = curl_easy_perform(curl);
+
+        // Check for errors
+        if(res != CURLE_OK) {
+            std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+        } else {
+            std::cout << "GET request sent successfully!" << std::endl;
+        }
+
+        // Cleanup the curl session
+        curl_easy_cleanup(curl);
+    }
+    return;
+}
 
 
 #if defined(_WIN32)
@@ -391,13 +423,15 @@ extern "C" {
         else if (option == 2)
             pipImages(images, heights, outputFilePath);
 
+         
+
         std::string base64Image=base64encode(outputFilePath);
         std::string imageKey="/IFFTImages/"+baseFilepath;
         std::string apiUrl="https://svcs-dev02.myharmony.com/UserAccountDirectorPlatform/UserAccountDirector.svc/json2/UploadFileToS3Bucket";
         
         std::string imageUrl=uploadImageToAPI(apiUrl,imageKey, base64Image);
-
-
+        postImageToIfttt(imageUrl);   
+        
         // Cleanup
         for (auto& image : images) {
             delete[] image.second;
