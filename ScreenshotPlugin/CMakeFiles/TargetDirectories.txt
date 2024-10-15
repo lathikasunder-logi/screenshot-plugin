@@ -1,0 +1,3 @@
+C:/Users/lsunder/logitech/screenshot-plugin/ScreenshotPlugin/CMakeFiles/plugin.dir
+C:/Users/lsunder/logitech/screenshot-plugin/ScreenshotPlugin/CMakeFiles/edit_cache.dir
+C:/Users/lsunder/logitech/screenshot-plugin/ScreenshotPlugin/CMakeFiles/rebuild_cache.dir

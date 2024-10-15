@@ -1,4 +1,5 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#define CURL_STATICLIB
 #include "stb_image_write.h"
 
 #include <curl/curl.h>
@@ -10,6 +11,7 @@
 #include <ApplicationServices/ApplicationServices.h>
 #endif
 
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <ctime>
@@ -17,15 +19,6 @@
 #include <utility> // For std::pair
 #include <memory>
 #include <cstring> // for memcpy
-
-//for hosting
-#include <aws/core/Aws.h>
-#include <aws/s3/S3Client.h>
-#include <aws/s3/model/PutObjectRequest.h>
-#include <aws/core/utils/Outcome.h>
-#include <aws/core/utils/memory/stl/AWSStringStream.h>
-#include <fstream>
-
 //for base64 encoding
 #include <sstream>
 #include <iomanip>
@@ -237,8 +230,8 @@ std::string uploadImageToAPI(const std::string& apiUrl, const std::string& image
         // Set headers
         struct curl_slist *headers = NULL;
         headers = curl_slist_append(headers, "Content-Type: application/json");
-        headers = curl_slist_append(headers, "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ijg5ZDgzZjQ0NDIzZDJiNjQxYTQ3YWJiMTMyNzg2MTJiODQ2OGNkNWQifQ.eyJqdGkiOiIzOGE1OWI4Ny1iZjA0LTQ4ODMtOWRjOS02ODk3MDkzMWI1YjkiLCJ2ZXIiOiIxLjAiLCJhbXIiOlsicHdkIl0sInNjb3BlIjoiIiwiaWF0IjoxNzI0MjM1OTI0LCJleHAiOjE3MjQyMzk1MjQsImF1ZCI6IjYwZWY2MjZlLWJlNjgtNGJiOC1hMjNhLTE3MjgxZGZkYTVhNyIsImlzcyI6Imh0dHBzOi8vc2FuZGJveC5hY2NvdW50cy5sb2dpLmNvbSIsInN1YiI6IjAxZjg4NjA1LWU1MjgtNDcwMi05YzUyLTAzZTE1ODA0ODVkNSJ9.GRappO6AnhzLu9j2Ugwx4GvA6G8_a8OsgFUPLYVSVKWNIRgS9ZQPvw5nkNqjf_1VNNomE1r46e0b39W4IQweUls9htZHe4DTWPoBts74V-CMS4ONhQR5Jc4Y7uZz7ksUyRf5tSJLvasbzdTB6he34fU6j5Nn8JDKSwsNKEirs1UPaQrMHpoLI-XYr9sRMnAm5VSU2etMvqFvEWy7tscVkArE2ZrRkpxBfxyDf1mKMsE5jIipIB1o2mtJg7h1FDrKEv4Z2n-1cYWdC8BhzsMVw1k4UuykLMixlLcQQgVYeaF7Q68sQAu3sah3yDErxhRf4Xe4E6OElYhnqPZV7OlDG6GVzE076chfZ7Ufm5sxU0QSjN4_bknadg9QCpoqT0PqzJo8DCnpsgY0wcrSMggVRkZTJuYbuG_ElCIt56Jy1GjoCGHp2eHgr58o_RLHh5_9EnxAUWKhmOhk5jYc1JLdmEnoYMhR6mCe4_IlArqWii3OXRc_vJ0oJZBexBMhO391vd_viE_vNHxLKmSlBRfI3Ua2IxGOgk15WRFFLQoSP3BaG8_dJd-QqCsBJwV_vFhARFwdnl-VkfpvFObzz51Awraex6xJYBmyvt47ZrHs4Qb-VdQsA-rwSk76nzov-35qpOD02Cak8wCe2irHYKjoUnJXtikYMBBdCWiVDkrxrsU");
-        headers = curl_slist_append(headers, "Cookie: .AUTHTOKEN=eyJhdXRoIjp7ImRldmljZSI6WyI4NjA2MCIsIjg3MTgzIl0sInVzZXJuYW1lIjpbImFuYW5kbmlybWFsYUBnbWFpbC5jb20iXSwiYWNjb3VudGlkIjpbIjQxNDYxIiwiNDE5NjIiLCI2MDc2NSJdLCJyZW1vdGUiOlsiNDk4MTIiLCI1MDgzMCJdLCJnbG9iYWxkZXZpY2V2ZXJzaW9uIjpbIjYyNTkzNCJdLCJob3VzZWhvbGRpZCI6WyIzMzA0MiJdLCJkYXRhY29uc2VudCI6WyJGYWxzZSJdfSwibWFjIjoiOVRzVXdrWTN3UmRlaVJyNTFjM013NE10dFJ6R3cxL2lOU2ZHby9EblA0OD0ifQ==; .HarmonyAuth=22A70627E2A1783D36B538F01F91962EC339CA296F710022E1DA7F8B5221EF9F656FEA80F7128C47D4012259D955D8A1C40DB0C2765A948E56E80694994E91BBBE20B798DBB9F0F5E7AA7D228981890CEDB4D5D258A23E1DD77A079DCF33D2AF3CBBE831E5D6F8C195C99D3A1D8576F23BAC423F4AE069C07F020DA5B00CE10D030B3006810FFC5C60999D0E611CCB4A2F4C3D57");
+        headers = curl_slist_append(headers, "Authorization:  Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjkxYWNmNWMwNmY4OThkNTIwOTFjNDdkNTkzNDU4OWQ0YmNhYjZjNjcifQ.eyJqdGkiOiJmMGRkZGYwZC1kZDAxLTQ5N2ItYjRhNy05OTQ0NWE4MTUxNjkiLCJ2ZXIiOiIxLjAiLCJhbXIiOlsicHdkIl0sImlhdCI6MTcyODkwMzExNywiZXhwIjoxNzI4OTA2NzE3LCJhdWQiOiIzNGRmY2NhZC03YTFhLTRlNGQtYWViMy0yZDljNTIxYzAzZmUiLCJpc3MiOiJodHRwczovL3NhbmRib3guYWNjb3VudHMubG9naS5jb20iLCJzdWIiOiJlMzdmMTllMy0xNWI3LTRmNzQtOWNhNS01NDllYzdjMDkxMmUifQ.UN25PKR5fG0_o20dyziOHmfxAnjPFkOVvwBDm43Q0QbVadeo4CYt8n5Il6pL6yP-vSf8I8TAkD8sIURxEH2xrkqkoyqzIWffUTL3vjHooysXLFdMTPj6vb7ojsyvh3WVZkPUVQUYGixFnnLbaXcJPDg5t--o8fukAwxo8YAPMqyn8s3stc7UloZ4Zejk1jC84Djej2CTKziItD0nr6yMdFXW_iAEfgLn5F3rwaO09qRvOaIay8FycOwLMcdIq7GUSDKZwqmmj0SSG2QIa8YkKdDAgjUunOz67vhdigrr5-9GeCkKlp6V5VnLf3fLG-ExxEf0wz5Ic92GpQ0BYAkaiJTRYmN-Ms3NVLSgwVVtOYTkQYXTYulMa6jDZHfceUKNH5WfPvH4zt5tgksXjW6wcaMSIvzekeJyurm_5_tl9C3B5Qyp3RUy6kCmW_p5YTjJxfgsbqQqd5l6cxAL5QyfJlT5MCNEeaVlYZcCQRRHXvM3wFVd0hDhlBEj-ky_E7EasQix0QaDYVt2ANuCP5OViREBPTQuPaayWLbXtK_742BboTjNHWbwfZkTz9XZ_qy5mYtgyriYI-uZ47QKYp42jbzWo-vXMjbrYwo_8ErB-5cZm9eioD6e4vgfdNTL0ijCkG0s_we3f_x5yLK5fs5fo6K7p8OIidWkQ3gQWeA1YLQ");
+        headers = curl_slist_append(headers, "Cookie: .AUTHTOKEN=eyJhdXRoIjp7ImRldmljZSI6W10sInVzZXJuYW1lIjpbImFwbStzeW5jdGVzdGRldjJAbG9naXRlY2guY29tIl0sImFjY291bnRpZCI6WyI1MjA0MCJdLCJyZW1vdGUiOltdLCJnbG9iYWxkZXZpY2V2ZXJzaW9uIjpbXSwiaG91c2Vob2xkaWQiOlsiMzg4MTAiXSwiZGF0YWNvbnNlbnQiOlsiVHJ1ZSJdfSwibWFjIjoidmJtNXdPRFIrb2Q2aFJoNjFYUVFHdEZlS3VDWnF2ZUYyTXBBa2g2UXBybz0ifQ==");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
         // Set up callback to capture response
@@ -274,8 +267,6 @@ std::string uploadImageToAPI(const std::string& apiUrl, const std::string& image
     return imageUrl;
 }
 
-
-#include <curl/curl.h>
 #include <nlohmann/json.hpp>
 void postImageToIfttt(std::string imageUrl)
 {
@@ -388,7 +379,7 @@ std::pair<int, unsigned char*> captureScreenshot(CGDirectDisplayID displayId, in
 
 extern "C" {
     // Capture screenshots from all monitors and combine them into a single image
-    void CaptureScreenshot(const char* baseFilename) {
+   __declspec(dllexport) void CaptureScreenshot(const char* baseFilename) {
         std::string baseFilepath(baseFilename);
         std::vector<std::pair<int, unsigned char*>> images;
         std::vector<int> heights;
