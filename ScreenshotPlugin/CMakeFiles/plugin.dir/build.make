@@ -76,15 +76,15 @@ CMakeFiles/plugin.dir/plugin.cpp.obj: CMakeFiles/plugin.dir/includes_CXX.rsp
 CMakeFiles/plugin.dir/plugin.cpp.obj: plugin.cpp
 CMakeFiles/plugin.dir/plugin.cpp.obj: CMakeFiles/plugin.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\lsunder\logitech\screenshot-plugin\ScreenshotPlugin\CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/plugin.dir/plugin.cpp.obj"
-	C:\MinGW\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/plugin.dir/plugin.cpp.obj -MF CMakeFiles\plugin.dir\plugin.cpp.obj.d -o CMakeFiles\plugin.dir\plugin.cpp.obj -c C:\Users\lsunder\logitech\screenshot-plugin\ScreenshotPlugin\plugin.cpp
+	C:\msys64\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/plugin.dir/plugin.cpp.obj -MF CMakeFiles\plugin.dir\plugin.cpp.obj.d -o CMakeFiles\plugin.dir\plugin.cpp.obj -c C:\Users\lsunder\logitech\screenshot-plugin\ScreenshotPlugin\plugin.cpp
 
 CMakeFiles/plugin.dir/plugin.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/plugin.dir/plugin.cpp.i"
-	C:\MinGW\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\lsunder\logitech\screenshot-plugin\ScreenshotPlugin\plugin.cpp > CMakeFiles\plugin.dir\plugin.cpp.i
+	C:\msys64\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\lsunder\logitech\screenshot-plugin\ScreenshotPlugin\plugin.cpp > CMakeFiles\plugin.dir\plugin.cpp.i
 
 CMakeFiles/plugin.dir/plugin.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/plugin.dir/plugin.cpp.s"
-	C:\MinGW\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\lsunder\logitech\screenshot-plugin\ScreenshotPlugin\plugin.cpp -o CMakeFiles\plugin.dir\plugin.cpp.s
+	C:\msys64\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\lsunder\logitech\screenshot-plugin\ScreenshotPlugin\plugin.cpp -o CMakeFiles\plugin.dir\plugin.cpp.s
 
 # Object files for target plugin
 plugin_OBJECTS = \

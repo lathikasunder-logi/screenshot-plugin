@@ -1,17 +1,27 @@
-cmake_minimum_required(VERSION 3.0)
-project(curllib_Test)
+cmake_minimum_required(VERSION 3.10)
+project(ScreenshotPlugin)
 
-# Find libcurl package
+set(CMAKE_CXX_STANDARD 11)  # or 11, 14, etc.
 find_package(CURL REQUIRED)
 
-# Add the path to the nlohmann json library
-include_directories(C:/json/single_include)  # Update with the correct path to nlohmann/json.hpp
+# Specify the MinGW 64-bit toolchain if needed
+set(CMAKE_CXX_COMPILER "C:/msys64/mingw64/bin/g++.exe")
 
-# Create a shared library (DLL) instead of an executable
+# Include directories for curl and nlohmann/json
+include_directories(C:/msys64/mingw64/include)
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
+
+# Create a shared library (DLL) from plugin.cpp
 add_library(plugin SHARED plugin.cpp)
 
-# Link libcurl to the shared library (DLL)
-target_link_libraries(plugin CURL::libcurl)
+# Link against libcurl
+ target_link_libraries(plugin CURL::libcurl)
 
-# Set output name for the DLL if you want to customize it
+# Specify the output name for the DLL
 set_target_properties(plugin PROPERTIES OUTPUT_NAME "plugin")
+
+# Handle RPATH for DLLs on Windows
+if(WIN32)
+    set(CMAKE_INSTALL_RPATH "$ORIGIN")
+endif()

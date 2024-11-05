@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = DotNetWrapper
-build_property.ProjectDir = /Users/lsunder/screenshot-plugin/DotNetWrapper/
+build_property.ProjectDir = C:\Users\lsunder\logitech\screenshot-plugin\DotNetWrapper\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 

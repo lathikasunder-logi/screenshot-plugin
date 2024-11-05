@@ -1,0 +1,8 @@
+[
+{
+  "directory": "C:/Users/lsunder/logitech/screenshot-plugin/build",
+  "command": "C:\\msys64\\mingw64\\bin\\g++.exe -Dplugin_EXPORTS @CMakeFiles/plugin.dir/includes_CXX.rsp -g -std=gnu++11 -o CMakeFiles\\plugin.dir\\plugin.cpp.obj -c C:\\Users\\lsunder\\logitech\\screenshot-plugin\\ScreenshotPlugin\\plugin.cpp",
+  "file": "C:/Users/lsunder/logitech/screenshot-plugin/ScreenshotPlugin/plugin.cpp",
+  "output": "CMakeFiles/plugin.dir/plugin.cpp.obj"
+}
+]

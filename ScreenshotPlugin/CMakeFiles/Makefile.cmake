@@ -53,6 +53,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "CMakeFiles/3.31.0-rc1/CMakeRCCompiler.cmake"
   "CMakeFiles/3.31.0-rc1/CMakeSystem.cmake"
   "CMakeLists.txt"
+  "C:/msys64/ucrt64/lib/cmake/CURL/CURLConfigVersion.cmake"
   )
 
 # The corresponding makefile is:
