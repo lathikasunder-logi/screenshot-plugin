@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DotNetWrapper")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+406b946810a07aff08029dcc46015dab552c3627")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6d7f149bb3aa2e7396eff80388c372ca68313a56")]
 [assembly: System.Reflection.AssemblyProductAttribute("DotNetWrapper")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DotNetWrapper")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

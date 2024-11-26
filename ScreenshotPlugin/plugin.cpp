@@ -67,59 +67,87 @@ void printImages(const std::vector<std::pair<int, unsigned char *>> &images)
         std::cout << std::endl;
     }
 }
-// Combines multiple images into a single collage
-void combineImages(const std::vector<std::pair<int, unsigned char *>> &images, const std::vector<int> &heights, const std::string &outputFilePath)
-{
-    if (images.empty())
+
+#include <memory>
+#include <cstring> // For memcpy
+
+// Helper function to downscale an image
+unsigned char* downscaleImage(unsigned char* data, int originalWidth, int originalHeight, int newWidth, int newHeight) {
+    std::unique_ptr<unsigned char[]> resizedData(new unsigned char[newWidth * newHeight * 4]);
+    float xRatio = static_cast<float>(originalWidth) / newWidth;
+    float yRatio = static_cast<float>(originalHeight) / newHeight;
+
+    for (int y = 0; y < newHeight; ++y) {
+        for (int x = 0; x < newWidth; ++x) {
+            int srcX = static_cast<int>(x * xRatio);
+            int srcY = static_cast<int>(y * yRatio);
+            std::memcpy(&resizedData[(y * newWidth + x) * 4],
+                        &data[(srcY * originalWidth + srcX) * 4],
+                        4); // Copy RGBA pixel
+        }
+    }
+    return resizedData.release();
+}
+
+// Combine images and compress the output
+void combineImages(const std::vector<std::pair<int, unsigned char*>>& images, const std::vector<int>& heights, const std::string& outputFilePath) {
+    if (images.empty()) {
+        std::cerr << "No images to combine.\n";
         return;
+    }
 
-    std::cout << "Images not empty\n";
-    // Calculate total width and max height for the collage
-    printImages(images);
-
-    std::cout << "Printed image op\n";
-
+    // Calculate total width and max height
     int totalWidth = 0;
     int maxHeight = 0;
+    std::vector<int> scaledHeights;
+    std::vector<int> scaledWidths;
+    std::vector<std::unique_ptr<unsigned char[]>> scaledImages;
 
-    int i = 0;
+    const int targetWidth = 800; // Adjust to your needs
+    const int targetHeight = 800;
 
-    for (const auto &imagePair : images)
-    {
-        std::cout << "Came into for loop\n";
-        int width = imagePair.first;
-        std::cout << "Image width: " + width;
+    for (size_t i = 0; i < images.size(); ++i) {
+        int originalWidth = images[i].first;
+        int originalHeight = heights[i];
 
-        int height = heights[i];
-        totalWidth += width;
-        if (height > maxHeight)
-        {
-            maxHeight = height;
-            std::cout << "\nUpdating max height";
-        }
-        i++;
+        // Compute new dimensions maintaining aspect ratio
+        float scale = std::min(static_cast<float>(targetWidth) / originalWidth, static_cast<float>(targetHeight) / originalHeight);
+        int newWidth = static_cast<int>(originalWidth * scale);
+        int newHeight = static_cast<int>(originalHeight * scale);
+
+        scaledWidths.push_back(newWidth);
+        scaledHeights.push_back(newHeight);
+
+        // Downscale image
+        scaledImages.emplace_back(downscaleImage(images[i].second, originalWidth, originalHeight, newWidth, newHeight));
+
+        totalWidth += newWidth;
+        maxHeight = std::max(maxHeight, newHeight);
     }
 
     // Allocate memory for the combined image
-    std::cout << "\nCalculated height, width now combining images";
     std::unique_ptr<unsigned char[]> combinedData(new unsigned char[totalWidth * maxHeight * 4]());
 
-    // Copy individual images into the combined image
+    // Copy scaled images into the combined image
     int offsetX = 0;
-    for (size_t i = 0; i < images.size(); ++i)
-    {
-        int width = images[i].first;
-        int height = heights[i];
-        unsigned char *data = images[i].second;
-        for (int y = 0; y < height; ++y)
-        {
-            std::memcpy(combinedData.get() + (y * totalWidth + offsetX) * 4, data + (y * width) * 4, width * 4);
+    for (size_t i = 0; i < scaledImages.size(); ++i) {
+        int width = scaledWidths[i];
+        int height = scaledHeights[i];
+        unsigned char* data = scaledImages[i].get();
+        for (int y = 0; y < height; ++y) {
+            std::memcpy(combinedData.get() + (y * totalWidth + offsetX) * 4,
+                        data + (y * width) * 4, width * 4);
         }
         offsetX += width;
     }
 
-    // Save the combined image
-    saveImage(outputFilePath, totalWidth, maxHeight, combinedData.get());
+    // Save the combined image as a compressed format (e.g., JPEG or WebP)
+    int quality = 90; // Adjust the quality (1-100)
+    if (stbi_write_jpg(outputFilePath.c_str(), totalWidth, maxHeight, 4, combinedData.get(), quality)) {
+        std::cout << "Image saved successfully as: " << outputFilePath << "\n";
+    } else {
+        std::cerr << "Failed to save the image.\n";
+    }
 }
 
 // Function to arrange images in a Picture-in-Picture (PIP) layout
@@ -231,7 +259,7 @@ std::string base64_encode(unsigned char const *bytes_to_encode, unsigned int in_
 std::string base64encode(const std::string &filePath)
 {
     // Open the file in binary mode
-    std::cout << "Base64rncoding entered....\n";
+    std::cout << "Base64encoding entered....\n";
     std::ifstream imageFile(filePath, std::ios::binary);
     std::cout << "image is taken into stream";
 
@@ -292,8 +320,8 @@ std::string uploadImageToAPI(const std::string &apiUrl, const std::string &image
         // Set headers
         struct curl_slist *headers = NULL;
         headers = curl_slist_append(headers, "Content-Type: application/json");
-        headers = curl_slist_append(headers, "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjkxYWNmNWMwNmY4OThkNTIwOTFjNDdkNTkzNDU4OWQ0YmNhYjZjNjcifQ.eyJqdGkiOiJmMGRkZGYwZC1kZDAxLTQ5N2ItYjRhNy05OTQ0NWE4MTUxNjkiLCJ2ZXIiOiIxLjAiLCJhbXIiOlsicHdkIl0sImlhdCI6MTczMDc4NzU2OSwiZXhwIjoxNzMwNzkxMTY5LCJhdWQiOiIzNGRmY2NhZC03YTFhLTRlNGQtYWViMy0yZDljNTIxYzAzZmUiLCJpc3MiOiJodHRwczovL3NhbmRib3guYWNjb3VudHMubG9naS5jb20iLCJzdWIiOiJlMzdmMTllMy0xNWI3LTRmNzQtOWNhNS01NDllYzdjMDkxMmUifQ.JPDe4wzacWjLA9X4Ar6eG9cit0KQk9NyRqqDa8HS8fBgPvTkVYJpxlxkjfCTLAtPLoE3qzfcJIyVf2APVD3nkICS9HpkiGc9_kcLs4TGl7fTOhPjjZbPRkgD537BH9u0avd-55o7XY2-jMUCqeN8uzZOFnnMVSkalQxB4OlQ7hbqkCYWgUx_rIHSQ1YLQcuZfa9iyLq1pFt_rbXe2z017FHtUnppDJpi_1Pfc7Ee1ridbrpRg8d67Hycv_mcU9Yf9--Yld6oQFXy8EOp6l-fVQivG2YXPQadpMgKS0Dp3rdKXLcSDiUyrcMv71Fb35Fy28bIojQ2FzPSfLV82dDkdTZRISd3zQL2rGxSlQg2VF8n_KB1BUXcwIm91t06OFuJsVPXqDLV2mGLbcnECxUBO7nBZ1dapesyRhtl3hu0ovHlS6G72vsQd60ZoZrV0lunJ1UJz9Hk_U8j5GDZ5KC66HLCMwNWShZBvZUSzcgKMVeWkB2f-SzhIwyHAindTw1F5YA5MMrBQTp9vuOvy39O4PJBxuF3Il716qey4z0t5mDXCmyNvhI9zdFsO-dQCyuvXLrCp4CjcCsi3nZp8pO9vQTbU4-SxTatSrpog58D7PvoOZeZyD8zFyzeznMYUDd3zzf3pu1yc5-XQ54wnpfII6b76HiMnbRCXm_xMZ30OYk");
-        headers = curl_slist_append(headers, "Cookie: .HarmonyAuth=E9A38894908DA8F4EB288B5F2104C7837CCFFED8075F0E723800A571848EBB125B58E0B43619C215DB81A8EDD93992F8FB8D647760D58D96FB49734A71061668BC163E6D2ECF0893480810D975B385CAE41EAF884861BC66D2E2CB5EAE0CEAAB86F1019231BE80539656DC79A8F1F5AD388BE770AA27323A98480E90E3BAACA17FE5E7FDDFF0DC05AD1E9F7ABAE5DA29AE90743F6E0BA3B47B0CBC35AE7E24229125F567; .AUTHTOKEN=eyJhdXRoIjp7ImRldmljZSI6W10sInVzZXJuYW1lIjpbImFwbStzeW5jdGVzdGRldjJAbG9naXRlY2guY29tIl0sImFjY291bnRpZCI6WyI1MjA0MCJdLCJyZW1vdGUiOltdLCJnbG9iYWxkZXZpY2V2ZXJzaW9uIjpbXSwiaG91c2Vob2xkaWQiOlsiMzg4MTAiXSwiZGF0YWNvbnNlbnQiOlsiVHJ1ZSJdfSwibWFjIjoidmJtNXdPRFIrb2Q2aFJoNjFYUVFHdEZlS3VDWnF2ZUYyTXBBa2g2UXBybz0ifQ==");
+        headers = curl_slist_append(headers, "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjkxYWNmNWMwNmY4OThkNTIwOTFjNDdkNTkzNDU4OWQ0YmNhYjZjNjcifQ.eyJqdGkiOiIxYzVkZDhhNS1jYTZiLTQ3YTYtODFjNC0yNTJkZTQyNTU2MTAiLCJ2ZXIiOiIxLjAiLCJhbXIiOlsicHdkIl0sImlhdCI6MTczMjYxNDY2MywiZXhwIjoxNzMyNjE4MjYzLCJhdWQiOiIzNGRmY2NhZC03YTFhLTRlNGQtYWViMy0yZDljNTIxYzAzZmUiLCJpc3MiOiJodHRwczovL3NhbmRib3guYWNjb3VudHMubG9naS5jb20iLCJzdWIiOiJlMzdmMTllMy0xNWI3LTRmNzQtOWNhNS01NDllYzdjMDkxMmUifQ.xEIMyZhZL_S-BHvBg4-sCdnuipd5vBOLp6YjKRHhzOhPI83qvxxVq-id7DQ0Ljeh08s6cCxZ6gIfilNeND2xVHv-nFf8QXBarhkJhIdT3wk_bqsJwfHMSXiv23H1LW89dEPofS4lWJXXD6mI1FlXLKblko_A-8xIOR-0-Qvr114QmC_Ejpi_8wUDP-QSmxdAkoHn_RSe_ioURBuZ0ovh0hnP0MJUpgdaBCuJ2GzNLJowDWeNi1EfR8EL40qXnTLQ4me0XRbLvdgV7LBk1Q2dwKGQilOhzizSaxSD0Z5m05jnr0FigwLDJ-nm4wCK4dieaa_Y8PKUVJWMOmYjf5rtd6SkES6YkhUOlCVH70LQmblZ3P9yokQN5ElitQ0Ckc0FJNqozkxDE6ZiL1i5dCUGcsDYUeXow8RuXEPiHh_rIKX-ZqxPiI_uXbznSyN11WzKmr__lJRBg-QuwKxLbHMzH7CMXi5ruWqYYmp69Iow3k3KANIXx4ha90aLPeqjVO7I6Gn46Z4BuwSUzDvQw3zFxs6D1qsSyjUrDiLqLWVqjTgMVOm1iOxFc454b6tqzE7_GHGxusOSyf2iVoUR1d8UdwcY2tFLb9kbkigBSUaK8EUltLC8Yvl7KXgmxI9M7nXKarcOoxoSBvfSgaPo_oakbQGCFeku5eMjoThJCxICbAY");
+        headers = curl_slist_append(headers, "Cookie: .HarmonyAuth=8E0E53BFC6342A14270F8F4B10EF5797218A34B76E4A3D0587FA2A8CD7F4D973E1E120F0C726C37FE86FB20F1106F69E7B1B45907D5D316BF419457E78A7B6B52186A07AB9F10E8C290EB966FEBBBF9133D1C8BD1136EB9266172A5B5AE8AC5CA935F899BEDBC156EA3CE4718B7C9197DE7ECFFBBCA441BCA5EDD673A41F1F6F63119395F0C4300CF721A432C208499CB4FBBB47FE20DA3AC8647FBF9D074F0CA02F6CF1; .AUTHTOKEN=eyJhdXRoIjp7ImRldmljZSI6W10sInVzZXJuYW1lIjpbImFwbStzeW5jdGVzdGRldjJAbG9naXRlY2guY29tIl0sImFjY291bnRpZCI6WyI1MjA0MCJdLCJyZW1vdGUiOltdLCJnbG9iYWxkZXZpY2V2ZXJzaW9uIjpbXSwiaG91c2Vob2xkaWQiOlsiMzg4MTAiXSwiZGF0YWNvbnNlbnQiOlsiVHJ1ZSJdfSwibWFjIjoidmJtNXdPRFIrb2Q2aFJoNjFYUVFHdEZlS3VDWnF2ZUYyTXBBa2g2UXBybz0ifQ==");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
         // Set up callback to capture response
@@ -315,8 +343,8 @@ std::string uploadImageToAPI(const std::string &apiUrl, const std::string &image
 
         try
         {
+            std::cout<<readBuffer;
             json responseJson = json::parse(readBuffer);
-            // std::cout<<readBuffer;
             imageUrl = responseJson["UploadFileToS3BucketResult"];
             std::cout << "Image URL: " << imageUrl << std::endl;
         }
@@ -421,63 +449,111 @@ void convertBGRAToRGBA(unsigned char *data, int width, int height)
 //     convertBGRAToRGBA(data, width, height);
 
 //     return std::make_pair(width, data);
-// }
+//
 
-void captureScreenshot(const std::string &outputFilePath)
+void captureScreenshotForMonitor(HDC hScreenDC, int width, int height, unsigned char* imgData, std::vector<std::pair<int, unsigned char *>>& images, std::vector<int>& heights)
 {
-    // Get the device context of the entire screen
-    HDC hScreenDC = GetDC(NULL);
-    HDC hMemoryDC = CreateCompatibleDC(hScreenDC);
-
-    // Get the width and height of the screen
-    int width = GetSystemMetrics(SM_CXSCREEN);
-    int height = GetSystemMetrics(SM_CYSCREEN);
-
-    // Create a compatible bitmap for the screen DC
     HBITMAP hBitmap = CreateCompatibleBitmap(hScreenDC, width, height);
+    if (hBitmap == NULL) {
+        std::cerr << "Failed to create bitmap" << std::endl;
+        return;
+    }
+
+    HDC hMemoryDC = CreateCompatibleDC(hScreenDC);
     SelectObject(hMemoryDC, hBitmap);
 
-    // Copy the screen into the bitmap
-    BitBlt(hMemoryDC, 0, 0, width, height, hScreenDC, 0, 0, SRCCOPY);
+    // Capture screen into the bitmap
+    if (!BitBlt(hMemoryDC, 0, 0, width, height, hScreenDC, 0, 0, SRCCOPY)) {
+        std::cerr << "Failed to copy screen to bitmap" << std::endl;
+        DeleteObject(hBitmap);
+        DeleteDC(hMemoryDC);
+        return;
+    }
 
-    // Prepare to save the bitmap data
     BITMAP bmp;
     GetObject(hBitmap, sizeof(BITMAP), &bmp);
+    unsigned char* pixels = new unsigned char[bmp.bmWidthBytes * bmp.bmHeight];
+    GetBitmapBits(hBitmap, bmp.bmWidthBytes * bmp.bmHeight, pixels);
 
-    // Create an array to hold the pixel data
-    int imageSize = bmp.bmWidthBytes * bmp.bmHeight;
-    unsigned char *pixels = new unsigned char[imageSize];
+    // Prepare image data in RGBA format
+    imgData = new unsigned char[width * height * 4]; // Allocate memory for the image data
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            int pixelIndex = y * bmp.bmWidthBytes + x * (bmp.bmBitsPixel / 8);
+            int imgIndex = y * width + x;
 
-    // Get the bitmap data
-    GetBitmapBits(hBitmap, imageSize, pixels);
-
-    // Convert the bitmap to a format compatible with stb_image_write
-    // Note: STB expects the data in RGBA format
-    unsigned char *imgData = new unsigned char[width * height * 4];
-    for (int y = 0; y < height; ++y)
-    {
-        for (int x = 0; x < width; ++x)
-        {
-            int pixelIndex = y * bmp.bmWidthBytes + x * 3; // Assuming 24-bit bitmap
-            int imgIndex = (height - 1 - y) * width + x;   // Flipping vertically for correct orientation
-
-            imgData[imgIndex * 4 + 0] = pixels[pixelIndex + 2]; // Red
-            imgData[imgIndex * 4 + 1] = pixels[pixelIndex + 1]; // Green
-            imgData[imgIndex * 4 + 2] = pixels[pixelIndex + 0]; // Blue
-            imgData[imgIndex * 4 + 3] = 255;                    // Alpha channel (fully opaque)
+            if (bmp.bmBitsPixel == 32) {
+                imgData[imgIndex * 4 + 0] = pixels[pixelIndex + 2]; // Red
+                imgData[imgIndex * 4 + 1] = pixels[pixelIndex + 1]; // Green
+                imgData[imgIndex * 4 + 2] = pixels[pixelIndex + 0]; // Blue
+                imgData[imgIndex * 4 + 3] = pixels[pixelIndex + 3]; // Alpha
+            } else {
+                imgData[imgIndex * 4 + 0] = pixels[pixelIndex + 2]; // Red
+                imgData[imgIndex * 4 + 1] = pixels[pixelIndex + 1]; // Green
+                imgData[imgIndex * 4 + 2] = pixels[pixelIndex + 0]; // Blue
+                imgData[imgIndex * 4 + 3] = 255; // Fully opaque alpha
+            }
         }
     }
 
-    // Save the image using stb_image_write
-    stbi_write_png(outputFilePath.c_str(), width, height, 4, imgData, width * 4);
+    // Store the captured data in the images vector
+    images.push_back({width, imgData});
+    heights.push_back(height);
 
     // Cleanup
     delete[] pixels;
-    delete[] imgData;
     DeleteObject(hBitmap);
     DeleteDC(hMemoryDC);
-    ReleaseDC(NULL, hScreenDC);
 }
+void captureScreenshot(const std::string &outputFilePath,bool isPip)
+{
+    // Create vectors to store image data and heights for all monitors
+    std::vector<std::pair<int, unsigned char *>> images;
+    std::vector<int> heights;
+
+    // EnumDisplayDevices to get all connected monitors
+    DISPLAY_DEVICE dd;
+    memset(&dd, 0, sizeof(dd));
+    dd.cb = sizeof(dd);
+
+    int monitorIndex = 0;
+
+    while (EnumDisplayDevices(NULL, monitorIndex, &dd, 0)) {
+        // Get the device context of the monitor
+        HDC hScreenDC = CreateDC(dd.DeviceName, NULL, NULL, NULL);
+        if (hScreenDC == NULL) {
+            std::cerr << "Failed to get monitor DC for monitor " << monitorIndex << std::endl;
+            monitorIndex++;
+            continue;
+        }
+
+        // Get the monitor's width and height
+        DEVMODE devMode;
+        memset(&devMode, 0, sizeof(devMode));
+        devMode.dmSize = sizeof(devMode);
+        if (EnumDisplaySettings(dd.DeviceName, ENUM_CURRENT_SETTINGS, &devMode)) {
+            int width = devMode.dmPelsWidth;
+            int height = devMode.dmPelsHeight;
+
+            // Capture screenshot for this monitor
+            unsigned char* imgData = nullptr; // Pass nullptr initially
+            captureScreenshotForMonitor(hScreenDC, width, height, imgData, images, heights);
+        }
+
+        // Release the device context
+        DeleteDC(hScreenDC);
+        monitorIndex++;
+    }
+
+    // After collecting all monitor images, call pipImages
+    if (!images.empty()) {
+
+       isPip?pipImages(images, heights, outputFilePath):combineImages(images, heights, outputFilePath);
+    } else {
+        std::cerr << "No monitors found or screenshots were not captured." << std::endl;
+    }
+}
+
 
 // Monitor enumeration callback to capture screenshots from all monitors
 // BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
@@ -527,7 +603,7 @@ std::pair<int, unsigned char *> captureScreenshot(CGDirectDisplayID displayId, i
 extern "C"
 {
     // Capture screenshots from all monitors and combine them into a single image
-    void CaptureScreenshot(const char *baseFilename)
+    void CaptureScreenshot(const char *baseFilename,bool isPip)
     {
         std::string baseFilepath(baseFilename);
         std::vector<std::pair<int, unsigned char *>> images;
@@ -563,7 +639,7 @@ extern "C"
         // else if (option == 2)
         //     pipImages(images, heights, outputFilePath);
 
-        captureScreenshot(outputFilePath);
+        captureScreenshot(outputFilePath,isPip);
         std::cout << "\nImages captured";
         std::string base64Image = base64encode(outputFilePath);
 
