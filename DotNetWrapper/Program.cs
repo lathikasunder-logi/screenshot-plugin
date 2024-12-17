@@ -29,12 +29,12 @@ class Program
             Console.WriteLine("Property 'isPip' not found in the JSON file.");
         }
         // Construct the filename for the screenshot
-
-        string filename = "screenshot_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".png";
-        Console.WriteLine("Capturing screenshot to " + filename);
+        string tempPath=Path.GetTempPath();
+        string filenameWithPath = Path.Combine(tempPath,"screenshot_" + DateTime.Now.ToString("yyyyMMddHHmmss"));
+        Console.WriteLine("Capturing screenshot to " + filenameWithPath);
         
         // Call the external function
-        CaptureScreenshot(filename,isPip);
+        CaptureScreenshot(filenameWithPath,isPip);
         Console.WriteLine("Screenshot captured.");
     }
 }
