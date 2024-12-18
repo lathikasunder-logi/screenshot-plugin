@@ -11,7 +11,8 @@ class Program
     static void Main(string[] args)
     {
         bool isPip=false;
-        string jsonFilePath = "events.json"; // Path to your JSON file
+        string userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        string jsonFilePath = Path.Combine(userPath,"events.json"); // Path to your JSON file
         // Read the JSON file
         string jsonString = File.ReadAllText(jsonFilePath);
 
@@ -33,6 +34,7 @@ class Program
         string filenameWithPath = Path.Combine(tempPath,"screenshot_" + DateTime.Now.ToString("yyyyMMddHHmmss"));
         Console.WriteLine("Capturing screenshot to " + filenameWithPath);
         
+        string osPlatform = RuntimeInformation.OSDescription;
         // Call the external function
         CaptureScreenshot(filenameWithPath,isPip);
         Console.WriteLine("Screenshot captured.");
